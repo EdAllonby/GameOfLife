@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GameOfLife
@@ -23,10 +24,10 @@ namespace GameOfLife
         {
             CurrentGeneration++;
 
-            foreach (Cell cell in cellGrid.Cells)
+            Parallel.ForEach(cellGrid.Cells.Cast<Cell>() , cell =>
             {
                 cell.PreviousState = cell.State;
-            }
+            });
 
             return Task.Factory.StartNew(() => cellGrid.Iterate());
         }

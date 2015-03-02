@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -65,19 +67,29 @@ namespace GameOfLifeApp
 
         private void UpdateToggles()
         {
-            for (int column = 0; column < game.GridSize; column++)
+            ThreadStart job = () =>
             {
-                for (int row = 0; row < game.GridSize; row++)
+                Parallel.For(0, game.GridSize, column =>
                 {
-                    Cell cell = game.GetCell(column, row);
-
-                    if (cell.PreviousState != cell.State)
+                    Parallel.For(0, game.GridSize, row =>
                     {
-                        ToggleButton toggle = toggleButtons[column, row];
-                        toggle.IsChecked = cell.State == CellState.Alive;
-                    }
-                }
-            }
+                        Cell cell = game.GetCell(column, row);
+
+                        if (cell.PreviousState != cell.State)
+                        {
+                            ToggleButton toggle = toggleButtons[column, row];
+
+                            Dispatcher.Invoke(DispatcherPriority.Normal, new Action(() =>
+                            {
+                                toggle.IsChecked = cell.State == CellState.Alive;
+                            }));
+                        }
+                    });
+                });
+            };
+
+            Thread thread = new Thread(job);
+            thread.Start();
         }
 
         private static Cell[,] InitialiseCells()
