@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GameOfLife
@@ -21,6 +22,11 @@ namespace GameOfLife
         public Task ProcessTurnAsync()
         {
             CurrentGeneration++;
+
+            foreach (Cell cell in cellGrid.Cells)
+            {
+                cell.PreviousState = cell.State;
+            }
 
             return Task.Factory.StartNew(() => cellGrid.Iterate());
         }

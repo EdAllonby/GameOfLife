@@ -51,18 +51,21 @@ namespace GameOfLife
 
                 Cells[column, row].State = CellState.Dead;
             }
+
             if (IsCellAlive(column, row) && !IsCellHealthy(column, row))
             {
                 Cells[column, row].PreviousState = Cells[column, row].State;
 
                 Cells[column, row].State = CellState.Dead;
             }
+
             if (IsCellAlive(column, row) && IsCellOverPopulated(column, row))
             {
                 Cells[column, row].PreviousState = Cells[column, row].State;
 
                 Cells[column, row].State = CellState.Dead;
             }
+
             if (!IsCellAlive(column, row) && IsCellAllowedToRelive(column, row))
             {
                 Cells[column, row].PreviousState = Cells[column, row].State;

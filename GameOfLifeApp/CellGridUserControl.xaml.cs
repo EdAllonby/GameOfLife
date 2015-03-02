@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using GameOfLife;
@@ -14,17 +15,20 @@ namespace GameOfLifeApp
     /// </summary>
     public partial class CellGridUserControl
     {
-        private const int GridSize = 50;
+        private const int GridSize = 100;
+        private const int CellSize = 8;
         private readonly Game game;
+        private readonly ToggleButton[,] toggleButtons = new ToggleButton[GridSize, GridSize];
         private DispatcherTimer simulationSpeed;
         private int simulationSpeedInMilliseconds;
 
         public CellGridUserControl()
         {
-            game = new Game(new CellGrid(InitialiseCells()));
+            SimulationSpeedInMilliseconds = 200;
 
+            game = new Game(new CellGrid(InitialiseCells()));
             InitializeComponent();
-         
+
             SetupGrid();
         }
 
@@ -69,7 +73,7 @@ namespace GameOfLifeApp
 
                     if (cell.PreviousState != cell.State)
                     {
-                        ToggleButton toggle = GetToggleFromCellPosition(column, row);
+                        ToggleButton toggle = toggleButtons[column, row];
                         toggle.IsChecked = cell.State == CellState.Alive;
                     }
                 }
@@ -99,7 +103,7 @@ namespace GameOfLifeApp
                 {
                     Height = new GridLength()
                 };
-                
+
                 CellGrid.RowDefinitions.Add(rowDefinition);
 
                 StackPanel stackPanel = new StackPanel {Orientation = Orientation.Horizontal};
@@ -107,6 +111,8 @@ namespace GameOfLifeApp
                 for (int buttonColumn = 0; buttonColumn < GridSize; buttonColumn++)
                 {
                     ToggleButton button = CreateButton(buttonColumn, stackPanelRow);
+
+                    toggleButtons[buttonColumn, stackPanelRow] = button;
 
                     stackPanel.Children.Add(button);
                 }
@@ -121,8 +127,8 @@ namespace GameOfLifeApp
         {
             ToggleButton button = new ToggleButton
             {
-                Width = 20,
-                Height = 20,
+                Width = CellSize,
+                Height = CellSize,
                 Background = new SolidColorBrush(Colors.Black),
                 BorderBrush = new SolidColorBrush(Colors.Tomato)
             };
@@ -132,13 +138,41 @@ namespace GameOfLifeApp
             button.Name = buttonName;
 
             button.Click += OnCellClicked;
+            button.MouseEnter += button_MouseLeftButtonDown;
             return button;
+        }
+
+        private void button_MouseLeftButtonDown(object sender, MouseEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+            {
+                ToggleButton clickedButton = e.Source as ToggleButton;
+
+                if (clickedButton != null)
+                {
+                    if (clickedButton.IsChecked != null && clickedButton.IsChecked.Value.Equals(true))
+                    {
+                        clickedButton.IsChecked = false;
+                    }
+                    else
+                    {
+                        clickedButton.IsChecked = true;
+                    }
+
+                    CellClicked(clickedButton);
+                }
+            }
         }
 
         private void OnCellClicked(object sender, RoutedEventArgs e)
         {
             ToggleButton clickedButton = e.Source as ToggleButton;
 
+            CellClicked(clickedButton);
+        }
+
+        private void CellClicked(ToggleButton clickedButton)
+        {
             if (clickedButton != null)
             {
                 Cell pressedCell = GetCellFromButtonName(clickedButton.Name);
@@ -152,34 +186,6 @@ namespace GameOfLifeApp
                     pressedCell.State = CellState.Dead;
                 }
             }
-        }
-
-        private ToggleButton GetToggleFromCellPosition(int column, int row)
-        {
-            foreach (object gridChild in CellGrid.Children)
-            {
-                StackPanel stackPanel = gridChild as StackPanel;
-
-                if (stackPanel != null)
-                {
-                    foreach (object stackPanelChild in stackPanel.Children)
-                    {
-                        ToggleButton toggle = stackPanelChild as ToggleButton;
-
-                        if (toggle != null)
-                        {
-                            string toggleNameToFind = "Button" + column + "r" + row;
-
-                            if (toggle.Name == toggleNameToFind)
-                            {
-                                return toggle;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return null;
         }
 
         private Cell GetCellFromButtonName(string buttonName)
