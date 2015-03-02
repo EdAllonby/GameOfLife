@@ -18,7 +18,7 @@ namespace GameOfLife
             get { return cellGrid.Size; }
         }
 
-        public Task ProcessTurn()
+        public Task ProcessTurnAsync()
         {
             CurrentGeneration++;
 

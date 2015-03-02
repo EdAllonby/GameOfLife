@@ -37,7 +37,7 @@ namespace GameOfLife.Tests
         {
             int lastTurn = game.CurrentGeneration;
 
-            game.ProcessTurn();
+            game.ProcessTurnAsync();
 
             int newTurn = game.CurrentGeneration;
 

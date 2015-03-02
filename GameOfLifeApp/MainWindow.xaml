@@ -20,7 +20,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Slider Grid.Column="0" Orientation="Vertical" Width="20" Height="200" Maximum="1000" Minimum="100" Margin="20" ValueChanged="OnSimulationSpeedChanged" />
+            <Slider VerticalAlignment="Top" Grid.Column="0" Orientation="Vertical" Width="20" Height="200" Maximum="1000" Minimum="100" Margin="20" ValueChanged="OnSimulationSpeedChanged" />
             
             <cellGrid:CellGridUserControl x:Name="CellGrid" Grid.Column="1" />
 

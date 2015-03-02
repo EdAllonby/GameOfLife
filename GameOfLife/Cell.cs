@@ -7,9 +7,12 @@ namespace GameOfLife
         public Cell(CellState cellState)
         {
             State = cellState;
+            PreviousState = cellState;
         }
 
         public CellState State { get; set; }
+
+        public CellState PreviousState { get; set; }
 
         public int Neighbours
         {

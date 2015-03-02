@@ -14,7 +14,7 @@ namespace GameOfLifeApp
     /// </summary>
     public partial class CellGridUserControl
     {
-        private const int GridSize = 20;
+        private const int GridSize = 50;
         private readonly Game game;
         private DispatcherTimer simulationSpeed;
         private int simulationSpeedInMilliseconds;
@@ -55,7 +55,7 @@ namespace GameOfLifeApp
 
         private async void dispatcherTimer_Tick(object sender, EventArgs e)
         {
-            await game.ProcessTurn();
+            await game.ProcessTurnAsync();
             UpdateToggles();
         }
 
@@ -65,11 +65,13 @@ namespace GameOfLifeApp
             {
                 for (int row = 0; row < game.GridSize; row++)
                 {
-                    ToggleButton toggle = GetToggleFromCellPosition(column, row);
+                    Cell cell = game.GetCell(column, row);
 
-                    CellState cellState = game.GetCell(column, row).State;
-
-                    toggle.IsChecked = cellState == CellState.Alive;
+                    if (cell.PreviousState != cell.State)
+                    {
+                        ToggleButton toggle = GetToggleFromCellPosition(column, row);
+                        toggle.IsChecked = cell.State == CellState.Alive;
+                    }
                 }
             }
         }
