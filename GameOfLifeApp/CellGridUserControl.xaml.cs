@@ -17,21 +17,41 @@ namespace GameOfLifeApp
     /// </summary>
     public partial class CellGridUserControl
     {
-        private const int GridSize = 100;
-        private const int CellSize = 8;
-        private readonly Game game;
-        private readonly ToggleButton[,] toggleButtons = new ToggleButton[GridSize, GridSize];
-        private DispatcherTimer simulationSpeed;
+        private const int CellSize = 15;
+        public readonly DependencyProperty GridSizeProperty;
+        private Game game;
+        private readonly DispatcherTimer simulationSpeed;
         private int simulationSpeedInMilliseconds;
+        private ToggleButton[,] toggleButtons;
 
         public CellGridUserControl()
         {
-            SimulationSpeedInMilliseconds = 200;
-
-            game = new Game(new CellGrid(InitialiseCells()));
             InitializeComponent();
 
-            SetupGrid();
+            simulationSpeed = new DispatcherTimer();
+            simulationSpeed.Tick += dispatcherTimer_Tick;
+            simulationSpeed.Interval = new TimeSpan(0, 0, 0, 0, SimulationSpeedInMilliseconds);
+
+            SimulationSpeedInMilliseconds = 200;
+
+            GridSizeProperty = DependencyProperty.Register("GridSize", typeof (int), typeof (CellGridUserControl), new PropertyMetadata((OnSomeValuePropertyChanged)));
+        }
+
+        public event EventHandler<int> NewGeneration; 
+
+        public int GridSize
+        {
+            get
+            {
+                int size = (int) GetValue(GridSizeProperty);
+                return size;
+            }
+            set
+            {
+                StopSimulation();
+                SetValue(GridSizeProperty, value);
+                SetupNewGridSize();
+            }
         }
 
         public int SimulationSpeedInMilliseconds
@@ -51,17 +71,34 @@ namespace GameOfLifeApp
             }
         }
 
+        private void OnSomeValuePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            GridSize = (int) e.NewValue;
+        }
+
+        private void SetupNewGridSize()
+        {
+            toggleButtons = new ToggleButton[GridSize, GridSize];
+            game = new Game(new CellGrid(InitialiseCells()));
+            InitializeComponent();
+
+            SetupGrid();
+        }
+
         public void StartSimulation()
         {
-            simulationSpeed = new DispatcherTimer();
-            simulationSpeed.Tick += dispatcherTimer_Tick;
-            simulationSpeed.Interval = new TimeSpan(0, 0, 0, 0, SimulationSpeedInMilliseconds);
             simulationSpeed.Start();
+        }
+
+        private void StopSimulation()
+        {
+            simulationSpeed.Stop();
         }
 
         private async void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             await game.ProcessTurnAsync();
+            OnNewGeneration(game.CurrentGeneration);
             UpdateToggles();
         }
 
@@ -79,10 +116,7 @@ namespace GameOfLifeApp
                         {
                             ToggleButton toggle = toggleButtons[column, row];
 
-                            Dispatcher.Invoke(DispatcherPriority.Normal, new Action(() =>
-                            {
-                                toggle.IsChecked = cell.State == CellState.Alive;
-                            }));
+                            Dispatcher.Invoke(DispatcherPriority.Normal, new Action(() => { toggle.IsChecked = cell.State == CellState.Alive; }));
                         }
                     });
                 });
@@ -92,7 +126,7 @@ namespace GameOfLifeApp
             thread.Start();
         }
 
-        private static Cell[,] InitialiseCells()
+        private Cell[,] InitialiseCells()
         {
             Cell[,] cells = new Cell[GridSize, GridSize];
 
@@ -109,6 +143,8 @@ namespace GameOfLifeApp
 
         private void SetupGrid()
         {
+            CellGrid.Children.Clear();
+
             for (int stackPanelRow = 0; stackPanelRow < GridSize; stackPanelRow++)
             {
                 RowDefinition rowDefinition = new RowDefinition
@@ -210,6 +246,12 @@ namespace GameOfLifeApp
             int row = int.Parse(components[1]);
 
             return game.GetCell(column, row);
+        }
+
+        protected virtual void OnNewGeneration(int e)
+        {
+            var handler = NewGeneration;
+            if (handler != null) handler(this, e);
         }
     }
 }

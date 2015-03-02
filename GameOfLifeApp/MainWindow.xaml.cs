@@ -14,6 +14,13 @@ namespace GameOfLifeApp
         public MainWindow()
         {
             InitializeComponent();
+
+            CellGrid.NewGeneration += CellGrid_NewGeneration;
+        }
+
+        void CellGrid_NewGeneration(object sender, int e)
+        {
+            GenerationLabel.Content = "Generation: " + e;
         }
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
